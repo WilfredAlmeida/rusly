@@ -1275,6 +1275,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ulid"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13a3aaa69b04e5b66cc27309710a569ea23593612387d67daaf102e73aa974fd"
+dependencies = [
+ "rand",
+]
+
+[[package]]
 name = "uncased"
 version = "0.9.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1300,8 +1309,10 @@ checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
 name = "url-shortener-rust"
 version = "0.1.0"
 dependencies = [
+ "rand",
  "rocket",
  "rusqlite",
+ "ulid",
 ]
 
 [[package]]

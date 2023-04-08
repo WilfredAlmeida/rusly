@@ -1,3 +1,7 @@
 if custom link is given and it already exists in the db then primary key error
 
 ulid id can be used as shortened url
+
+ulids have similar starting characters and alphanumeric numeric unique values
+
+even uuids are alphanumeric so cannot use both uuid and ulid
