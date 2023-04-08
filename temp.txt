@@ -1,0 +1,3 @@
+if custom link is given and it already exists in the db then primary key error
+
+ulid id can be used as shortened url
