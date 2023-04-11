@@ -3,7 +3,6 @@ extern crate rocket;
 use rand::Rng;
 use rocket::{
     fairing::AdHoc,
-    http::hyper::request,
     response::Redirect,
     serde::{json::Json, Deserialize, Serialize},
     Build, Rocket,
@@ -40,39 +39,7 @@ static HOST_URI: &str = "http://127.0.0.1:8001";
 
 #[post("/shorten", data = "<request_body>")]
 async fn shorten_url_handler(request_body: Json<RequestBody>, db: Db) -> Json<ResponseBody> {
-    // let db = match Connection::open("urls.db") {
-    //     Ok(c) => c,
-    //     Err(e) => {
-    //         println!("1");
-    //         eprintln!("{}", e.to_string());
-    //         return Json(ResponseBody {
-    //             shortened_url: None,
-    //             error: Some(e.to_string()),
-    //         });
-    //     }
-    // };
-
-    // match db.execute(
-    //     "CREATE TABLE IF NOT EXISTS urls (
-    //     id TEXT(7) PRIMARY KEY,
-    //     fullUrl TEXT(512) NOT NULL,
-    //     time INTEGER NOT NULL
-    // )",
-    //     params![],
-    // ) {
-    //     Ok(result) => {
-    //         println!("{}", result)
-    //     }
-    //     Err(err) => {
-    //         println!("TABLE CREATION ERROR");
-    //         eprintln!("{}", err.to_string());
-    //         return Json(ResponseBody {
-    //             shortened_url: None,
-    //             error: Some(err.to_string()),
-    //         });
-    //     }
-    // }
-
+  
     let url_to_shorten = match &request_body.url_to_shorten {
         Some(s) => {
             if is_url_valid(s.to_string()) {
@@ -160,14 +127,6 @@ async fn shorten_url_handler(request_body: Json<RequestBody>, db: Db) -> Json<Re
 
 #[get("/<murl>")]
 async fn index(murl: String, db: Db) -> Option<Redirect> {
-    // let db = match Connection::open("urls.db") {
-    //     Ok(c) => c,
-    //     Err(e) => {
-    //         println!("1");
-    //         eprintln!("{}", e.to_string());
-    //         return None;
-    //     }
-    // };
 
     let query = format!("SELECT fullUrl FROM urls WHERE id='{}'", murl);
     
