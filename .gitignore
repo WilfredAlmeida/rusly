@@ -1,4 +1,6 @@
 /target
 cargo.log
 *.db
+.vscode
 temp.txt
+.env

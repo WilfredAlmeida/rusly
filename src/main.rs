@@ -18,6 +18,8 @@ use regex::Regex;
 
 use url::Url;
 
+use std::env::var;
+
 #[database("rusqlite")]
 struct Db(Connection);
 
@@ -35,11 +37,11 @@ struct ResponseBody {
     error: Option<String>,
 }
 
-static HOST_URI: &str = "http://127.0.0.1:8001";
-
 #[post("/shorten", data = "<request_body>")]
 async fn shorten_url_handler(request_body: Json<RequestBody>, db: Db) -> Json<ResponseBody> {
-  
+
+    let HOST_URI = var("HOST_URI").unwrap();
+
     let url_to_shorten = match &request_body.url_to_shorten {
         Some(s) => {
             if is_url_valid(s.to_string()) {
@@ -127,12 +129,12 @@ async fn shorten_url_handler(request_body: Json<RequestBody>, db: Db) -> Json<Re
 
 #[get("/<murl>")]
 async fn index(murl: String, db: Db) -> Option<Redirect> {
-
     let query = format!("SELECT fullUrl FROM urls WHERE id='{}'", murl);
-    
-    let link_to_redirect_to = match db.run(move |conn|{
-        conn.query_row(&query, [], |row| row.get::<_, String>(0))
-    }).await {
+
+    let link_to_redirect_to = match db
+        .run(move |conn| conn.query_row(&query, [], |row| row.get::<_, String>(0)))
+        .await
+    {
         Ok(s) => s,
         Err(e) => {
             println!("SELECT ERROR");
@@ -170,6 +172,9 @@ async fn init_db(rocket: Rocket<Build>) -> Rocket<Build> {
 }
 
 pub fn stage() -> AdHoc {
+    //ToDo: Make this safe
+    // unsafe { HOST_URI = Some(var("HOST_URI").unwrap()) };
+
     AdHoc::on_ignite("Rusqlite Stage", |rocket| async {
         rocket
             .attach(Db::fairing())
