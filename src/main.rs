@@ -5,7 +5,7 @@ use rocket::{
     serde::{json::Json, Deserialize, Serialize},
 };
 use rand::Rng;
-use rusqlite::{Connection};
+use rocket_sync_db_pools::rusqlite::{Connection,params};
 
 use std::{time::{SystemTime, UNIX_EPOCH}};
 
@@ -47,7 +47,7 @@ fn shorten_url_handler(request_body: Json<RequestBody>) -> Json<ResponseBody> {
         fullUrl TEXT(512) NOT NULL,
         time INTEGER NOT NULL
     )",
-        (),
+        params![],
     ) {
         Ok(result) => {
             println!("{}", result)
@@ -85,7 +85,7 @@ fn shorten_url_handler(request_body: Json<RequestBody>) -> Json<ResponseBody> {
 
     match db.execute(
         "INSERT INTO urls (id,fullUrl,time) VALUES (?1, ?2, ?3)",
-        (&shorten_string, &request_body.url_to_shorten, timestamp),
+        params![&shorten_string, &request_body.url_to_shorten, timestamp],
     ) {
         Ok(result) => {
             if result == 1 {
