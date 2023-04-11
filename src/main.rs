@@ -4,12 +4,10 @@ use rocket::{
     response::Redirect,
     serde::{json::Json, Deserialize, Serialize},
 };
-
+use rand::Rng;
 use rusqlite::{Connection};
 
-use rand::distributions::{Alphanumeric, DistString};
-
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{time::{SystemTime, UNIX_EPOCH}};
 
 use regex::Regex;
 
@@ -77,7 +75,7 @@ fn shorten_url_handler(request_body: Json<RequestBody>) -> Json<ResponseBody> {
 
             String::from(s)
         },
-        _=>Alphanumeric.sample_string(&mut rand::thread_rng(), 7)
+        _=>generate_shortened_url(7)
     };
 
     let timestamp = SystemTime::now()
@@ -157,6 +155,18 @@ fn rocket() -> _ {
 
 //Regex checkcing of custom link
 fn is_custom_link_valid(link_param: &str) -> bool {
-    let re = Regex::new(r"[^a-zA-Z0-9-]+").unwrap();
+    let re = Regex::new(r"[^a-zA-Z-]+").unwrap();
     return !re.is_match(link_param);
+}
+
+
+fn generate_shortened_url(length: usize) -> String {
+    const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
+
+    (0..length)
+        .map(|_| {
+            let index = rand::thread_rng().gen_range(1..CHARSET.len());
+            CHARSET[index] as char
+        })
+        .collect()
 }
