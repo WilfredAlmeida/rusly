@@ -11,6 +11,8 @@ use rand::distributions::{Alphanumeric, DistString};
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use regex::Regex;
+
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
 struct RequestBody {
@@ -53,7 +55,7 @@ fn shorten_url_handler(request_body: Json<RequestBody>) -> Json<ResponseBody> {
             println!("{}", result)
         }
         Err(err) => {
-            println!("2");
+            println!("TABLE CREATION ERROR");
             eprintln!("{}", err.to_string());
             return Json(ResponseBody {
                 shortened_url: None,
@@ -65,7 +67,7 @@ fn shorten_url_handler(request_body: Json<RequestBody>) -> Json<ResponseBody> {
     let shorten_string = match &request_body.custom_link{
         Some(s)=> {
 
-            if s.len() != 7 {
+            if s.len() != 7 || !is_custom_link_valid(s) {
                 
                 return Json(ResponseBody {
                     shortened_url: None,
@@ -102,10 +104,14 @@ fn shorten_url_handler(request_body: Json<RequestBody>) -> Json<ResponseBody> {
             println!("Insertion Failed");
             eprintln!("{}", err.to_string());
 
+            let error_message = if err.to_string() == "UNIQUE constraint failed: urls.id" {
+                String::from("Custom Link Already Exists")
+            } else {err.to_string()};
+
             return Json(ResponseBody {
                 shortened_url: None,
-                error: Some(err.to_string()),
-            });
+                error: Some(error_message),
+            }); 
         }
     };
 
@@ -147,4 +153,10 @@ fn rocket() -> _ {
     rocket::build()
         .mount("/", routes![index])
         .mount("/v1", routes![shorten_url_handler])
+}
+
+//Regex checkcing of custom link
+fn is_custom_link_valid(link_param: &str) -> bool {
+    let re = Regex::new(r"[^a-zA-Z0-9-]+").unwrap();
+    return !re.is_match(link_param);
 }
