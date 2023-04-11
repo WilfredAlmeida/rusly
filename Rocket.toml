@@ -1,5 +1,5 @@
 [default]
 port = 8001
 
-[default.databases.sqlite_logs]
-url = "./urls.db"
+[default.databases.rusqlite]
+url = "file:urls?mode=memory&cache=shared"

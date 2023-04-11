@@ -2,14 +2,17 @@
 extern crate rocket;
 use rocket::{
     response::Redirect,
-    serde::{json::Json, Deserialize, Serialize},
+    serde::{json::Json, Deserialize, Serialize}, Rocket, Build, fairing::AdHoc,
 };
 use rand::Rng;
-use rocket_sync_db_pools::rusqlite::{Connection,params};
+use rocket_sync_db_pools::{rusqlite::{Connection,params}, database};
 
 use std::{time::{SystemTime, UNIX_EPOCH}};
 
 use regex::Regex;
+
+#[database("rusqlite")]
+struct Db(Connection);
 
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
@@ -149,9 +152,34 @@ fn index(murl: String) -> Option<Redirect> {
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/", routes![index])
-        .mount("/v1", routes![shorten_url_handler])
+        .attach(stage())
 }
+
+
+async fn init_db(rocket: Rocket<Build>) -> Rocket<Build> {
+    Db::get_one(&rocket).await
+        .expect("database mounted")
+        .run(|conn| {
+            conn.execute(r#"CREATE TABLE IF NOT EXISTS urls (
+                id TEXT(7) PRIMARY KEY,
+                fullUrl TEXT(512) NOT NULL,
+                time INTEGER NOT NULL
+            )"#, params![])
+        }).await
+        .expect("can init rusqlite DB");
+
+    rocket
+}
+
+pub fn stage() -> AdHoc {
+    AdHoc::on_ignite("Rusqlite Stage", |rocket| async {
+        rocket.attach(Db::fairing())
+            .attach(AdHoc::on_ignite("Rusqlite Init", init_db))
+            .mount("/", routes![index])
+            .mount("/v1", routes![shorten_url_handler])
+    })
+}
+
 
 //Regex checkcing of custom link
 fn is_custom_link_valid(link_param: &str) -> bool {
