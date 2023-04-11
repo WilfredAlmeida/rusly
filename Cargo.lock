@@ -2022,6 +2022,7 @@ dependencies = [
  "rocket_db_pools",
  "rocket_sync_db_pools",
  "sqlx",
+ "url",
 ]
 
 [[package]]
