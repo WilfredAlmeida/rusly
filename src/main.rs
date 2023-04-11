@@ -62,8 +62,21 @@ fn shorten_url_handler(request_body: Json<RequestBody>) -> Json<ResponseBody> {
         }
     }
 
-    let string = Alphanumeric.sample_string(&mut rand::thread_rng(), 7);
-    println!("{}", string.to_lowercase());
+    let shorten_string = match &request_body.custom_link{
+        Some(s)=> {
+
+            if s.len() != 7 {
+                
+                return Json(ResponseBody {
+                    shortened_url: None,
+                    error: Some(String::from("custom_link length should be 7 alphabetic characters")),
+                });
+            }
+
+            String::from(s)
+        },
+        _=>Alphanumeric.sample_string(&mut rand::thread_rng(), 7)
+    };
 
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -72,15 +85,15 @@ fn shorten_url_handler(request_body: Json<RequestBody>) -> Json<ResponseBody> {
 
     match db.execute(
         "INSERT INTO urls (id,fullUrl,time) VALUES (?1, ?2, ?3)",
-        (&string, &request_body.url_to_shorten, timestamp),
+        (&shorten_string, &request_body.url_to_shorten, timestamp),
     ) {
         Ok(result) => {
-            if (result == 1) {
+            if result == 1 {
                 println!("Data Inserted");
                 println!("{}", result);
 
                 return Json(ResponseBody {
-                    shortened_url: Some(format!("{}/{}", HOST_URI, string)),
+                    shortened_url: Some(format!("{}/{}", HOST_URI, shorten_string)),
                     error: None,
                 });
             }
