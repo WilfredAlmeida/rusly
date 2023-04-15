@@ -5,20 +5,18 @@ use rocket::{
     fairing::AdHoc,
     response::Redirect,
     serde::{json::Json, Deserialize, Serialize},
-    Build, Rocket,
+    Build, Rocket, request::{FromRequest, Outcome, self}, Request, http::HeaderMap
 };
 use rocket_sync_db_pools::{
     database,
     rusqlite::{params, Connection},
 };
 
-use std::time::{SystemTime, UNIX_EPOCH};
+use url::Url;
+use std::{time::{SystemTime, UNIX_EPOCH}, convert::Infallible};
 
 use regex::Regex;
 
-use url::Url;
-
-use std::env::var;
 
 #[database("rusqlite")]
 struct Db(Connection);
@@ -36,11 +34,23 @@ struct ResponseBody {
     shortened_url: Option<String>,
     error: Option<String>,
 }
+struct RequestHeaders<'h>(&'h HeaderMap<'h>);
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for RequestHeaders<'r> {
+    type Error = Infallible;
+
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
+        let request_headers = request.headers();
+        Outcome::Success(RequestHeaders(&request_headers))
+    }
+}
+
 
 #[post("/shorten", data = "<request_body>")]
-async fn shorten_url_handler(request_body: Json<RequestBody>, db: Db) -> Json<ResponseBody> {
+async fn shorten_url_handler(headers: RequestHeaders<'_>, request_body: Json<RequestBody>, db: Db) -> Json<ResponseBody> {
+    let host_uri = format!("https://{}",headers.0.get_one("Host").unwrap());
 
-    let HOST_URI = var("HOST_URI").unwrap();
 
     let url_to_shorten = match &request_body.url_to_shorten {
         Some(s) => {
@@ -99,7 +109,7 @@ async fn shorten_url_handler(request_body: Json<RequestBody>, db: Db) -> Json<Re
                 println!("{}", result);
 
                 return Json(ResponseBody {
-                    shortened_url: Some(format!("{}/{}", HOST_URI, shorten_string)),
+                    shortened_url: Some(format!("{}/{}", host_uri, shorten_string)),
                     error: None,
                 });
             }
@@ -172,8 +182,6 @@ async fn init_db(rocket: Rocket<Build>) -> Rocket<Build> {
 }
 
 pub fn stage() -> AdHoc {
-    //ToDo: Make this safe
-    // unsafe { HOST_URI = Some(var("HOST_URI").unwrap()) };
 
     AdHoc::on_ignite("Rusqlite Stage", |rocket| async {
         rocket
