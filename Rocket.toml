@@ -1,6 +1,8 @@
 [debug]
 port = 8001
 
-[default]
 [default.databases.rusqlite]
+url = "file:urls.db"
+
+[release]
 url = "file:urls.db"
