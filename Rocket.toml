@@ -1,5 +1,5 @@
 [debug]
-port = 8001
+port = 8002
 
 [default.databases.rusqlite]
 url = "file:urls.db"

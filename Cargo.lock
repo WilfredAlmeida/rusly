@@ -1355,6 +1355,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "rusly"
+version = "0.1.0"
+dependencies = [
+ "rand",
+ "regex",
+ "rocket",
+ "rocket_db_pools",
+ "rocket_sync_db_pools",
+ "sqlx",
+ "url",
+]
+
+[[package]]
 name = "rusqlite"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2010,19 +2023,6 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
-]
-
-[[package]]
-name = "url-shortener-rust"
-version = "0.1.0"
-dependencies = [
- "rand",
- "regex",
- "rocket",
- "rocket_db_pools",
- "rocket_sync_db_pools",
- "sqlx",
- "url",
 ]
 
 [[package]]
