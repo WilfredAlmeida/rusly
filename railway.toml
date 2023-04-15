@@ -1,5 +1,4 @@
 [[services]]
   internal_port = 8000
-  protocol = "tcp"
-  script = "ROCKET_PORT=$PORT target/release/rusly"
+
 
