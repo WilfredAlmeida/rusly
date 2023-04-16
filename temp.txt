@@ -7,3 +7,8 @@ ulids have similar starting characters and alphanumeric numeric unique values
 even uuids are alphanumeric so cannot use both uuid and ulid
 
 for better computing generate random short url on client side and send it to server
+
+Rocket matches paths in the order they are provided in the match.
+.mount("/", routes![index_default, index])
+here it goes to index_default and if it matches doesn't goto index.
+In the vidce versa, it goes to index and expects the query param and it'll error

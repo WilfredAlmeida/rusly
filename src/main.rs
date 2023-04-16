@@ -156,6 +156,12 @@ async fn index(murl: String, db: Db) -> Option<Redirect> {
     return Some(Redirect::permanent(link_to_redirect_to));
 }
 
+#[get("/")]
+async fn index_default() -> String {
+    return String::from("Hello Heckerr");
+}
+
+
 #[launch]
 fn rocket() -> _ {
     rocket::build().attach(stage())
@@ -187,7 +193,7 @@ pub fn stage() -> AdHoc {
         rocket
             .attach(Db::fairing())
             .attach(AdHoc::on_ignite("Rusqlite Init", init_db))
-            .mount("/", routes![index])
+            .mount("/", routes![index_default,index])
             .mount("/v1", routes![shorten_url_handler])
     })
 }
