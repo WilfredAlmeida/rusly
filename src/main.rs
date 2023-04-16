@@ -2,10 +2,10 @@
 extern crate rocket;
 use rand::Rng;
 use rocket::{
-    fairing::AdHoc,
+    fairing::{AdHoc, Fairing, Info, Kind},
     response::Redirect,
     serde::{json::Json, Deserialize, Serialize},
-    Build, Rocket, request::{FromRequest, Outcome, self}, Request, http::HeaderMap
+    Build, Rocket, request::{FromRequest, Outcome, self}, Request, http::{HeaderMap, Header}, Response
 };
 use rocket_sync_db_pools::{
     database,
@@ -16,6 +16,35 @@ use url::Url;
 use std::{time::{SystemTime, UNIX_EPOCH}, convert::Infallible};
 
 use regex::Regex;
+
+
+/// Catches all OPTION requests in order to get the CORS related Fairing triggered.
+#[options("/<_..>")]
+fn all_options() {
+    /* Intentionally left empty */
+}
+
+pub struct Cors;
+
+#[rocket::async_trait]
+impl Fairing for Cors {
+    fn info(&self) -> Info {
+        Info {
+            name: "Cross-Origin-Resource-Sharing Fairing",
+            kind: Kind::Response,
+        }
+    }
+
+    async fn on_response<'r>(&self, _request: &'r Request<'_>, response: &mut Response<'r>) {
+        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Methods",
+            "POST, PATCH, PUT, DELETE, HEAD, OPTIONS, GET",
+        ));
+        response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
+        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+    }
+}
 
 
 #[database("rusqlite")]
@@ -164,7 +193,7 @@ async fn index_default() -> String {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().attach(stage())
+    rocket::build().attach(stage()).attach(Cors)
 }
 
 async fn init_db(rocket: Rocket<Build>) -> Rocket<Build> {
