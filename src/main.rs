@@ -204,7 +204,7 @@ async fn init_db(rocket: Rocket<Build>) -> Rocket<Build> {
             conn.execute(
                 r#"CREATE TABLE IF NOT EXISTS urls (
                 id TEXT(7) PRIMARY KEY,
-                fullUrl TEXT(512) NOT NULL,
+                fullUrl TEXT(1024) NOT NULL,
                 time INTEGER NOT NULL
             )"#,
                 params![],
