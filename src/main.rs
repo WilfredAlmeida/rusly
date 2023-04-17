@@ -17,7 +17,7 @@ use std::{time::{SystemTime, UNIX_EPOCH}, convert::Infallible};
 
 use regex::Regex;
 
-
+//--------------------Start: Needed for CORS---------------------------------------------
 /// Catches all OPTION requests in order to get the CORS related Fairing triggered.
 #[options("/<_..>")]
 fn all_options() {
@@ -45,24 +45,32 @@ impl Fairing for Cors {
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }
 }
-
+//--------------------End: Needed for CORS------------------------------------------------
 
 #[database("rusqlite")]
 struct Db(Connection);
 
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
+
+//Request body schema for /v1/shorten route
 struct RequestBody {
     url_to_shorten: Option<String>,
     custom_link: Option<String>,
 }
 
+
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
+
+//Response body schema for /v1/shorten route
 struct ResponseBody {
     shortened_url: Option<String>,
     error: Option<String>,
 }
+
+//--------------------Start: Needed to get Host URL from headers-------------------------
+
 struct RequestHeaders<'h>(&'h HeaderMap<'h>);
 
 #[rocket::async_trait]
@@ -75,9 +83,14 @@ impl<'r> FromRequest<'r> for RequestHeaders<'r> {
     }
 }
 
+//--------------------End: Needed to get Host URL from headers-------------------------
 
+
+///shorten endpoint
 #[post("/shorten", data = "<request_body>")]
 async fn shorten_url_handler(headers: RequestHeaders<'_>, request_body: Json<RequestBody>, db: Db) -> Json<ResponseBody> {
+
+    //Shortened url = host_uri + random string
     let host_uri = format!("https://{}",headers.0.get_one("Host").unwrap());
 
 
@@ -166,6 +179,9 @@ async fn shorten_url_handler(headers: RequestHeaders<'_>, request_body: Json<Req
     })
 }
 
+
+
+// /<murl> endpoint, redirects to short url
 #[get("/<murl>")]
 async fn index(murl: String, db: Db) -> Option<Redirect> {
     let query = format!("SELECT fullUrl FROM urls WHERE id='{}'", murl);
@@ -178,6 +194,7 @@ async fn index(murl: String, db: Db) -> Option<Redirect> {
         Err(e) => {
             println!("SELECT ERROR");
             eprint!("{}", e.to_string());
+            //ToDo: Find/make a better 404 page
             return Some(Redirect::permanent("https://google.com/1234qwer"));
         }
     };
@@ -191,11 +208,14 @@ async fn index_default() -> String {
 }
 
 
+//main function
 #[launch]
 fn rocket() -> _ {
     rocket::build().attach(stage()).attach(Cors)
 }
 
+
+//Initializes db
 async fn init_db(rocket: Rocket<Build>) -> Rocket<Build> {
     Db::get_one(&rocket)
         .await
@@ -233,6 +253,7 @@ fn is_custom_link_valid(link_param: &str) -> bool {
     return !re.is_match(link_param);
 }
 
+//Generates random alphabetic string of given length
 fn generate_shortened_url(length: usize) -> String {
     const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
 
@@ -244,6 +265,7 @@ fn generate_shortened_url(length: usize) -> String {
         .collect()
 }
 
+//Checks URL validity, done by parsing the url directly
 fn is_url_valid(url_str: String) -> bool {
     match Url::parse(&url_str) {
         Ok(_) => true,
