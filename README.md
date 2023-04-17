@@ -17,8 +17,8 @@ Let's take a quick look at the available endpoints
 | Route | Description | Request Body | Response |
 | --- | --- | --- | --- |
 | `/` GET | The default home route | *None* | Hello Heckerr |
-| `/v1/shorten` POST | Takes in the URL to shorten and returns the shortened URL. | \- `custom_link`: Optional, strictly 7-character alphabetic custom shortened URL string | \- `shortened_url`: A shortened string URL. |
-| \- `error`: Error message string |  |  |  |
+| `/v1/shorten` POST | Takes in the URL to shorten and returns the shortened URL. | \- `url_to_shorten`: String url to shorten | \- `shortened_url`: A shortened string URL. |
+| | | \- `custom_link`: Optional, strictly 7-character alphabetic custom shortened URL string | \- `error`: Error message string | 
 | `/<short-url` GET | Permanently redirects to the specified short URL string | *None* | *None* |
 
 # Database
