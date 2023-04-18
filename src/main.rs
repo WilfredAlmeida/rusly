@@ -94,8 +94,13 @@ async fn shorten_url_handler(headers: RequestHeaders<'_>, request_body: Json<Req
     let host_uri = format!("https://{}",headers.0.get_one("Host").unwrap());
 
 
+    let url_regex = Regex::new(r"^https?://").unwrap();
     let url_to_shorten = match &request_body.url_to_shorten {
         Some(s) => {
+            let mut s = s.to_string();
+            if !url_regex.is_match(&s) {
+                s = format!("https://{}", s.to_string());
+            }
             if is_url_valid(s.to_string()) {
                 s.to_string()
             } else {
